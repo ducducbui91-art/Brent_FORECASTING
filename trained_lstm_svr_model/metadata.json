@@ -1,0 +1,22 @@
+{
+  "model_name": "LSTM-SVR hybrid",
+  "description": "LSTM feature extractor + SVR regressor for Brent crude oil price forecasting",
+  "window_size": 1,
+  "lstm_units": 10,
+  "dropout": 0.05,
+  "epochs": 10,
+  "batch_size": 32,
+  "svr_kernel": "rbf",
+  "svr_C": 100,
+  "svr_epsilon": 0.01,
+  "svr_gamma": "auto",
+  "date_col": "Date",
+  "price_col": "Dated_Brent",
+  "train_mae": 1.553905101742514,
+  "train_r2": 0.9724196830520145,
+  "val_mae": 1.020420052549267,
+  "val_r2": 0.7969954183620283,
+  "test_mae": 3.032513495393305,
+  "test_r2": 0.9622644968543679,
+  "last_training_date": "2026-05-13"
+}
