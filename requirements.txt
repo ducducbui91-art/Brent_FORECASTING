@@ -3,5 +3,5 @@ pandas==2.2.2
 numpy==1.26.4
 scikit-learn==1.6.1
 joblib==1.4.2
-tensorflow==2.18.0
-keras==3.8.0
+tensorflow==2.19.1
+keras==3.10.0
