@@ -22,7 +22,7 @@ st.set_page_config(
 DEFAULT_MODEL_DIR = Path("trained_lstm_svr_model")
 
 
-st.title("🛢️ Dated Brent Forecast App")
+st.title("Dated Brent Forecast App")
 st.caption("LSTM feature extractor + SVR regressor")
 
 st.markdown(
