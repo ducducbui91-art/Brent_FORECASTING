@@ -27,12 +27,7 @@ st.caption("LSTM feature extractor + SVR regressor")
 
 st.markdown(
     """
-App này dùng bộ model bạn đã train sẵn:
-
-- `lstm_predictor_model.keras`
-- `svr_regressor.pkl`
-- `scaler.pkl`
-- `metadata.json`
+App này dùng bộ model đã train sẵn:
 
 Bạn upload file CSV giá Brent mới nhất, app sẽ dự báo giá Dated Brent cho các bước tiếp theo.
 """
