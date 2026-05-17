@@ -64,7 +64,12 @@ def load_price_series_from_file(
 ) -> pd.Series:
     df = read_csv_flexible(file_obj)
     df.columns = df.columns.astype(str).str.strip()
-
+    # Xử lý tên cột, bao gồm cả ký tự BOM ẩn ở đầu file CSV
+    df.columns = (
+        df.columns.astype(str)
+        .str.replace("\ufeff", "", regex=False)
+        .str.strip()
+    )
     if date_col not in df.columns:
         raise ValueError(f"Không tìm thấy cột ngày '{date_col}'. Các cột hiện có: {list(df.columns)}")
 
