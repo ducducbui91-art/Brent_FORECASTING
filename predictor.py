@@ -1,12 +1,15 @@
+import io
 import json
+import zipfile
 from pathlib import Path
 
+import h5py
 import joblib
 import numpy as np
 import pandas as pd
 
-from tensorflow.keras import Model, Input
-from tensorflow.keras.models import load_model
+from tensorflow.keras import Model, Input, Sequential
+from tensorflow.keras.layers import LSTM, Dense
 
 
 def read_csv_flexible(file_obj):
@@ -82,11 +85,111 @@ def load_price_series_from_file(
     return series
 
 
+def rebuild_lstm_model_from_metadata(meta):
+    """
+    Dựng lại kiến trúc LSTM từ metadata.
+    Không deserialize config .keras, nên tránh lỗi:
+    Unrecognized keyword arguments passed to Dense: {'quantization_config': None}
+    """
+    window_size = int(meta["window_size"])
+    lstm_units = int(meta.get("lstm_units", 10))
+    dropout = float(meta.get("dropout", 0.05))
+
+    model = Sequential([
+        Input(shape=(window_size, 1), name="price_window_input"),
+        LSTM(lstm_units, dropout=dropout, name="lstm_feature"),
+        Dense(1, name="price_output"),
+    ])
+
+    # Build model bằng dummy input
+    _ = model(np.zeros((1, window_size, 1), dtype=np.float32))
+
+    return model
+
+
+def _find_lstm_weight_group(h5_file):
+    """
+    Tìm group chứa weights của LSTM trong model.weights.h5.
+    Với file hiện tại thường là: layers/lstm/cell/vars
+    """
+    layers_group = h5_file["layers"]
+
+    for layer_name in layers_group.keys():
+        layer_group = layers_group[layer_name]
+        if "cell" in layer_group and "vars" in layer_group["cell"]:
+            vars_group = layer_group["cell"]["vars"]
+            if all(str(i) in vars_group for i in range(3)):
+                return vars_group
+
+    raise KeyError("Không tìm thấy group weights của LSTM trong model.weights.h5")
+
+
+def _find_dense_weight_group(h5_file):
+    """
+    Tìm group chứa weights của Dense trong model.weights.h5.
+    Với file hiện tại thường là: layers/dense/vars
+    """
+    layers_group = h5_file["layers"]
+
+    for layer_name in layers_group.keys():
+        layer_group = layers_group[layer_name]
+        if "vars" not in layer_group:
+            continue
+
+        vars_group = layer_group["vars"]
+        if "0" in vars_group and "1" in vars_group:
+            w_shape = tuple(vars_group["0"].shape)
+            b_shape = tuple(vars_group["1"].shape)
+
+            # Dense cuối có dạng kernel=(units, 1), bias=(1,)
+            if len(w_shape) == 2 and w_shape[-1] == 1 and b_shape == (1,):
+                return vars_group
+
+    raise KeyError("Không tìm thấy group weights của Dense trong model.weights.h5")
+
+
+def load_lstm_model_from_keras_weights(lstm_path, meta):
+    """
+    Load LSTM model bằng cách:
+    1. Dựng lại architecture từ metadata
+    2. Mở file .keras như zip
+    3. Đọc model.weights.h5
+    4. Set weights thủ công vào LSTM và Dense
+
+    Cách này không gọi load_model(), nên không bị lỗi deserialize Dense quantization_config.
+    """
+    model = rebuild_lstm_model_from_metadata(meta)
+
+    with zipfile.ZipFile(lstm_path, "r") as z:
+        if "model.weights.h5" not in z.namelist():
+            raise FileNotFoundError("Không tìm thấy model.weights.h5 trong file .keras")
+
+        weights_bytes = z.read("model.weights.h5")
+
+    with h5py.File(io.BytesIO(weights_bytes), "r") as h5:
+        lstm_vars = _find_lstm_weight_group(h5)
+        dense_vars = _find_dense_weight_group(h5)
+
+        lstm_weights = [
+            np.array(lstm_vars["0"]),
+            np.array(lstm_vars["1"]),
+            np.array(lstm_vars["2"]),
+        ]
+
+        dense_weights = [
+            np.array(dense_vars["0"]),
+            np.array(dense_vars["1"]),
+        ]
+
+    model.get_layer("lstm_feature").set_weights(lstm_weights)
+    model.get_layer("price_output").set_weights(dense_weights)
+
+    return model
+
+
 def build_feature_extractor_safely(lstm, window_size: int) -> Model:
     """
     Tạo feature extractor an toàn, không phụ thuộc vào lstm.input.
-    Cách này tránh lỗi:
-    The layer sequential has never been called and thus has no defined input.
     """
     feature_input = Input(shape=(window_size, 1), name="feature_input")
     x = feature_input
@@ -122,12 +225,14 @@ def load_lstm_svr_pipeline(model_dir):
             "Thiếu file model: " + ", ".join(missing)
         )
 
-    lstm = load_model(lstm_path)
     svr = joblib.load(svr_path)
     scaler = joblib.load(scaler_path)
 
     with open(metadata_path, "r", encoding="utf-8") as f:
         meta = json.load(f)
+
+    # Quan trọng: không dùng load_model(lstm_path)
+    lstm = load_lstm_model_from_keras_weights(lstm_path, meta)
 
     window_size = int(meta["window_size"])
     feature_model = build_feature_extractor_safely(lstm, window_size)
