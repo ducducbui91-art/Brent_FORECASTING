@@ -59,7 +59,7 @@ def clean_numeric_series(s: pd.Series) -> pd.Series:
 def load_price_series_from_file(
     file_obj,
     date_col: str = "Date",
-    price_col: str = "Dated_Brent",
+    price_col: str = "Price",
     dayfirst: bool = True,
 ) -> pd.Series:
     df = read_csv_flexible(file_obj)
