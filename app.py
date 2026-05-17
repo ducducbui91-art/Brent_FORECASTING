@@ -68,7 +68,7 @@ with st.sidebar:
 **Format CSV khuyến nghị**
 
 ```text
-Date;Dated_Brent
+Date;Price
 01/01/2024;77,72
 02/01/2024;78,25
 ```
@@ -76,7 +76,7 @@ Date;Dated_Brent
 Hoặc:
 
 ```text
-Date,Dated_Brent
+Date,Price
 2024-01-01,77.72
 2024-01-02,78.25
 ```
