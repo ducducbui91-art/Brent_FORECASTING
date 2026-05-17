@@ -11,7 +11,7 @@
   "svr_epsilon": 0.01,
   "svr_gamma": "auto",
   "date_col": "Date",
-  "price_col": "Dated_Brent",
+  "price_col": "Price",
   "train_mae": 1.553905101742514,
   "train_r2": 0.9724196830520145,
   "val_mae": 1.020420052549267,
