@@ -23,13 +23,13 @@ DEFAULT_MODEL_DIR = Path("trained_lstm_svr_model")
 
 
 st.title("Dated Brent Forecast App")
-st.caption("LSTM feature extractor + SVR regressor")
+st.caption("Weighted ensemble forecasting model")
 
 st.markdown(
     """
 App này dùng bộ model đã train sẵn:
 
-Bạn upload file CSV giá Brent mới nhất, app sẽ dự báo giá Dated Brent cho các bước tiếp theo.
+Bạn upload file CSV hoặc Excel giá Brent mới nhất, app sẽ dự báo giá Dated Brent cho các bước tiếp theo.
 """
 )
 
@@ -40,7 +40,7 @@ with st.sidebar:
     model_dir = st.text_input(
         "Thư mục model",
         value=str(DEFAULT_MODEL_DIR),
-        help="Thư mục chứa lstm_predictor_model.keras, svr_regressor.pkl, scaler.pkl, metadata.json",
+        help="Thư mục chứa các file model đã train, scaler.pkl và metadata.json",
     )
 
     forecast_steps = st.number_input(
@@ -60,7 +60,7 @@ with st.sidebar:
 
     st.markdown(
         """
-**Format CSV khuyến nghị**
+**Format file khuyến nghị**
 
 ```text
 Date;Price
@@ -68,25 +68,27 @@ Date;Price
 02/01/2024;78,25
 ```
 
-Hoặc:
+Hoặc CSV/Excel dạng:
 
 ```text
 Date,Price
 2024-01-01,77.72
 2024-01-02,78.25
 ```
+
+File hỗ trợ: `.csv`, `.xlsx`.
 """
     )
 
 
 uploaded_file = st.file_uploader(
-    "Upload file CSV dữ liệu Dated Brent mới nhất",
-    type=["csv"],
+    "Upload file CSV hoặc Excel dữ liệu Dated Brent mới nhất",
+    type=["csv", "xlsx"],
 )
 
 
 if uploaded_file is None:
-    st.info("Hãy upload file CSV để chạy dự báo.")
+    st.info("Hãy upload file CSV hoặc Excel để chạy dự báo.")
     st.stop()
 
 
@@ -105,7 +107,7 @@ try:
         price_col=meta.get("price_col", "Dated_Brent"),
     )
 except Exception as exc:
-    st.error("Không đọc được file CSV. Kiểm tra tên cột Date và Dated_Brent.")
+    st.error("Không đọc được file. Kiểm tra định dạng file và tên cột ngày/giá.")
     st.exception(exc)
     st.stop()
 
@@ -217,6 +219,18 @@ if st.button("Chạy dự báo", type="primary"):
         data=csv_bytes,
         file_name="dated_brent_forecast.csv",
         mime="text/csv",
+    )
+
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+        forecast_df.to_excel(writer, index=False, sheet_name="forecast")
+    excel_buffer.seek(0)
+
+    st.download_button(
+        label="Tải file forecast Excel",
+        data=excel_buffer,
+        file_name="dated_brent_forecast.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
     st.warning(
