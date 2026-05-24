@@ -66,10 +66,28 @@ def load_model_compat(model_path):
 
 def read_csv_flexible(file_obj):
     """
-    Read CSV flexibly for a Streamlit uploaded file or a file path.
-    Supports comma and semicolon separators.
+    Read uploaded data flexibly.
+
+    Supports:
+    - CSV: .csv, comma separator, semicolon separator, decimal dot, decimal comma
+    - Excel: .xlsx through openpyxl
+
+    The function accepts both a Streamlit UploadedFile and a normal file path.
     """
+    filename = getattr(file_obj, "name", "")
+    filename_lower = str(filename).lower()
+
+    if hasattr(file_obj, "seek"):
+        file_obj.seek(0)
+
+    # Excel .xlsx
+    if filename_lower.endswith(".xlsx"):
+        return pd.read_excel(file_obj, engine="openpyxl")
+
+    # CSV fallback
     try:
+        if hasattr(file_obj, "seek"):
+            file_obj.seek(0)
         return pd.read_csv(file_obj, sep=None, engine="python")
     except Exception:
         pass
@@ -83,8 +101,8 @@ def read_csv_flexible(file_obj):
 
     if hasattr(file_obj, "seek"):
         file_obj.seek(0)
-    return pd.read_csv(file_obj, sep=",", decimal=".")
 
+    return pd.read_csv(file_obj, sep=",", decimal=".")
 
 def clean_numeric_series(s: pd.Series) -> pd.Series:
     """
