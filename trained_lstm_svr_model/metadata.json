@@ -1,0 +1,198 @@
+{
+  "model_type": "weighted_ensemble_bo_slsqp",
+  "model_name": "CNN-LSTM-BiLSTM-GRU-BiGRU-DFFNN BO/SLSQP weighted ensemble",
+  "description": "Weighted ensemble inspired by Zhang and Lahmiri Entropy 2025 crude oil paper. The app uses recursive one-step forecasting for multi-step horizons.",
+  "prediction_mode": "one_step_recursive",
+  "window_size": 30,
+  "date_col": "Date",
+  "price_col": "Price",
+  "model_names": [
+    "cnn",
+    "lstm",
+    "bilstm",
+    "gru",
+    "bigru",
+    "dffnn"
+  ],
+  "ensemble_weights": {
+    "cnn": 0.16666666666666666,
+    "lstm": 0.16666666666666666,
+    "bilstm": 0.16666666666666666,
+    "gru": 0.16666666666666666,
+    "bigru": 0.16666666666666666,
+    "dffnn": 0.16666666666666666
+  },
+  "bayesian_optimization_trials_per_model": 0,
+  "epochs": 20,
+  "batch_size": 32,
+  "patience": 10,
+  "params_by_model": {
+    "cnn": {
+      "filters": 64,
+      "kernel_size": 3,
+      "dense_units": 32,
+      "learning_rate": 0.001
+    },
+    "lstm": {
+      "units": 64,
+      "learning_rate": 0.001
+    },
+    "bilstm": {
+      "units": 64,
+      "learning_rate": 0.001
+    },
+    "gru": {
+      "units": 64,
+      "learning_rate": 0.001
+    },
+    "bigru": {
+      "units": 64,
+      "learning_rate": 0.001
+    },
+    "dffnn": {
+      "hidden_layers": 2,
+      "neurons": 64,
+      "activation": "relu",
+      "learning_rate": 0.001
+    }
+  },
+  "fit_info_by_model": {
+    "cnn": {
+      "used_bayesian_optimization": false,
+      "best_val_loss_scaled": 0.00013116386253386736,
+      "epochs_ran": 20
+    },
+    "lstm": {
+      "used_bayesian_optimization": false,
+      "best_val_loss_scaled": 0.00012821395648643374,
+      "epochs_ran": 20
+    },
+    "bilstm": {
+      "used_bayesian_optimization": false,
+      "best_val_loss_scaled": 0.00011620418808888644,
+      "epochs_ran": 20
+    },
+    "gru": {
+      "used_bayesian_optimization": false,
+      "best_val_loss_scaled": 8.854078623699024e-05,
+      "epochs_ran": 20
+    },
+    "bigru": {
+      "used_bayesian_optimization": false,
+      "best_val_loss_scaled": 8.555494423490018e-05,
+      "epochs_ran": 20
+    },
+    "dffnn": {
+      "used_bayesian_optimization": false,
+      "best_val_loss_scaled": 0.00010929691779892892,
+      "epochs_ran": 20
+    }
+  },
+  "split_info": {
+    "n_observations": 9191,
+    "n_windows": 9161,
+    "n_train_windows": 6412,
+    "n_val_windows": 1374,
+    "n_test_windows": 1375,
+    "train_target_start": "1987-07-02",
+    "train_target_end": "2012-10-08",
+    "val_target_start": "2012-10-09",
+    "val_target_end": "2018-03-02",
+    "test_target_start": "2018-03-05",
+    "test_target_end": "2023-08-07"
+  },
+  "metrics": {
+    "validation": {
+      "cnn": {
+        "rmse": 1.544393860928738,
+        "mae": 1.1886852769698986,
+        "mape_percent": 1.919893429984892,
+        "r2": 0.9969855824219408
+      },
+      "lstm": {
+        "rmse": 1.5269282160145747,
+        "mae": 1.1785052575745785,
+        "mape_percent": 1.929916654995429,
+        "r2": 0.9970533773600208
+      },
+      "bilstm": {
+        "rmse": 1.4536565681799176,
+        "mae": 1.1390217846310988,
+        "mape_percent": 1.846121953738528,
+        "r2": 0.9973293872977785
+      },
+      "gru": {
+        "rmse": 1.2688861055796485,
+        "mae": 0.9789210878952448,
+        "mape_percent": 1.586476871563725,
+        "r2": 0.9979651492334258
+      },
+      "bigru": {
+        "rmse": 1.2473073948676323,
+        "mae": 0.9601024255655392,
+        "mape_percent": 1.5476606572979636,
+        "r2": 0.9980337701965786
+      },
+      "dffnn": {
+        "rmse": 1.409791497230153,
+        "mae": 1.097665380008703,
+        "mape_percent": 1.773532740037621,
+        "r2": 0.9974881306061704
+      },
+      "weighted_ensemble": {
+        "rmse": 1.3641900622656993,
+        "mae": 1.0582918791181724,
+        "mape_percent": 1.7190605147941007,
+        "r2": 0.9976480014838376
+      }
+    },
+    "test": {
+      "cnn": {
+        "rmse": 2.560768463934122,
+        "mae": 1.7550088265158914,
+        "mape_percent": 2.7496852711826643,
+        "r2": 0.9844910451262127
+      },
+      "lstm": {
+        "rmse": 2.4156896457575265,
+        "mae": 1.6707992262406783,
+        "mape_percent": 2.6573046466998114,
+        "r2": 0.9861985669712913
+      },
+      "bilstm": {
+        "rmse": 2.330901899421947,
+        "mae": 1.6715430707064542,
+        "mape_percent": 2.6596646467800964,
+        "r2": 0.9871503914285802
+      },
+      "gru": {
+        "rmse": 2.1196474254325026,
+        "mae": 1.465408034584739,
+        "mape_percent": 2.2974075828488094,
+        "r2": 0.9893740158782691
+      },
+      "bigru": {
+        "rmse": 2.077332973610229,
+        "mae": 1.4308865342573687,
+        "mape_percent": 2.2275552157358205,
+        "r2": 0.9897940335533891
+      },
+      "dffnn": {
+        "rmse": 2.423726593012494,
+        "mae": 1.6735056526877663,
+        "mape_percent": 2.6646104310029477,
+        "r2": 0.9861065800672429
+      },
+      "weighted_ensemble": {
+        "rmse": 2.260911395827895,
+        "mae": 1.5618125429603864,
+        "mape_percent": 2.461613100176641,
+        "r2": 0.9879104818265835
+      }
+    }
+  },
+  "last_training_date": "2023-08-07",
+  "data_file": "brent_data.csv",
+  "tensorflow_version": "2.21.0",
+  "seed": 42
+}
