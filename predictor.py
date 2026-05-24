@@ -14,6 +14,52 @@ from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.models import load_model
 
 
+def _remove_quantization_config(obj):
+    """
+    Remove Keras 3 quantization_config keys from a .keras config tree.
+    Some deployment environments cannot deserialize models saved with this key.
+    """
+    if isinstance(obj, dict):
+        obj.pop("quantization_config", None)
+        for value in obj.values():
+            _remove_quantization_config(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            _remove_quantization_config(item)
+    return obj
+
+
+def load_model_compat(model_path):
+    """
+    Load a Keras model normally. If loading fails because the saved .keras file
+    contains quantization_config, create a temporary patched .keras file with
+    those keys removed, then load that patched file.
+    """
+    model_path = Path(model_path)
+
+    try:
+        return load_model(model_path, compile=False, safe_mode=False)
+    except TypeError as exc:
+        if "quantization_config" not in str(exc):
+            raise
+
+        patched_path = model_path.with_name(model_path.stem + "_patched.keras")
+
+        with zipfile.ZipFile(model_path, "r") as zin:
+            with zipfile.ZipFile(patched_path, "w", compression=zipfile.ZIP_DEFLATED) as zout:
+                for item in zin.infolist():
+                    data = zin.read(item.filename)
+
+                    if item.filename == "config.json":
+                        config = json.loads(data.decode("utf-8"))
+                        config = _remove_quantization_config(config)
+                        data = json.dumps(config).encode("utf-8")
+
+                    zout.writestr(item, data)
+
+        return load_model(patched_path, compile=False, safe_mode=False)
+
+
 # -----------------------------------------------------------------------------
 # CSV/data helpers
 # -----------------------------------------------------------------------------
@@ -220,7 +266,7 @@ def _load_ensemble_pipeline(model_dir: Path):
 
     models: Dict[str, Model] = {}
     for name in model_names:
-        models[name] = load_model(model_dir / f"{name}.keras", compile=False)
+        models[name] = load_model_compat(model_dir / f"{name}.keras")
 
     bundle = {
         "_pipeline_type": "weighted_ensemble_bo_slsqp",
