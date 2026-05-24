@@ -6,3 +6,6 @@ joblib==1.4.2
 tensorflow==2.18.0
 keras==3.8.0
 h5py==3.11.0
+scipy==1.13.1
+keras-tuner==1.4.7
+openpyxl==3.1.5
